@@ -2,6 +2,7 @@ package com.Revature
 import scala.io.Source
 import java.sql.DriverManager
 import java.sql.Connection
+import scala.util.Random
 import scala.util.control.Breaks._
 import scala.io.StdIn
 import scala.util.matching.Regex
@@ -16,6 +17,7 @@ object bakery_game {
   val password = "Fuck74!MySQL"
   var connection:Connection = DriverManager.getConnection(url, username, password)
   val statement = connection.createStatement()
+  val randy = new Random()
 
   def main(args: Array[String]): Unit = {
     refresh()
@@ -39,11 +41,52 @@ object bakery_game {
             gameLoop = false
           }else{
             if(answer(0) == 'y') {
-              if(checkIngr(recipe)){
+              if(checkIngr(recipe)) {
                 subtractIngr(recipe)
                 money += sell(recipe)
-              }
-              else{println("You don't have the right ingredients!")}
+                println("Would you like to go to the store?")
+                answer = readLine()
+                if (answer.toLowerCase() == "quit") {
+                  gameLoop = false
+                } else {
+                    if (answer(0) == 'y') {
+                      val randFood = randy.nextInt(13) + 1
+                      val quant = randy.nextInt(20) + 1
+                      val divi = randy.nextInt(11) + 1
+                      val price = (randFood * quant) / divi
+                      val todaysFood = statement.executeQuery("select foodName from food where food.id=" + randFood + ';')
+                      while (todaysFood.next()) {
+                        println("Today the shop is selling " + quant + " " + todaysFood.getString(1) + " for $" + price + '.')
+                      }
+                      println("Will you purchase? Y/n")
+                      answer = readLine()
+                      if (answer.toLowerCase() == "quit") {
+                        gameLoop = false
+                      }
+                      else {
+                        if (answer(0) == 'y') {
+                          if(money < price){
+                            println("You don't have enough money!")
+                          }else{
+                            money = money - price
+                            val stocksATM = statement.executeQuery("SELECT id from stock;")
+                            var haveSome = false
+                            while(stocksATM.next()){
+                              if(stocksATM.getString(1).toInt==randFood){
+                                haveSome = true
+                              }
+                            }
+                            if(haveSome){
+                              val newStock =  statement.executeUpdate("UPDATE stock SET quantity = quantity+"+quant+" WHERE stock.id = "+randFood+';')
+                            }else{
+                              val newStock = statement.executeUpdate("INSERT INTO stock(id, quantity) VALUES("+randFood+','+quant+");")
+                            }
+                          }
+                        }
+                      }
+                    }
+                }
+              }else{println("You don't have the right ingredients!")}
             }
           }
         }
@@ -126,10 +169,11 @@ object bakery_game {
     }
   }
   def sell(recipe: String): Int={
-    
+    val cash = randy.nextInt(100)
     val resultSet = statement.executeQuery("select recipeName from recipe where recipe.id ="+recipe.toInt+';')
     while (resultSet.next()){
-      println("Y")
+      println("You made $"+cash+ " from selling your "+resultSet.getString(1)+'.')
     }
+    return cash
   }
 }
