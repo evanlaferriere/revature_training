@@ -3,10 +3,8 @@ import scala.io.Source
 import java.sql.DriverManager
 import java.sql.Connection
 import scala.util.control.Breaks._
-
 import scala.io.StdIn
 import scala.util.matching.Regex
-
 import java.sql.PreparedStatement
 import java.sql.SQLException
 import javax.sql.DataSource
@@ -22,11 +20,13 @@ object bakery_game {
   def main(args: Array[String]): Unit = {
     refresh()
     println("Hello baker!")
+    var money = 0
     var gameLoop = true
     while (gameLoop) {
+      println("You have $"+money+'.')
       kitchenStocks()
       knownRecipes()
-      println("What do you want to make? (Type the recipe number) ")
+      println("What do you want to make today? (Type the recipe number) ")
       var recipe: String = readLine()
       if (recipe.toLowerCase == "quit") {gameLoop = false}
       else {
@@ -39,7 +39,11 @@ object bakery_game {
             gameLoop = false
           }else{
             if(answer(0) == 'y') {
-              subtractIngr(recipe)
+              if(checkIngr(recipe)){
+                subtractIngr(recipe)
+                money += sell(recipe)
+              }
+              else{println("You don't have the right ingredients!")}
             }
           }
         }
@@ -83,12 +87,49 @@ object bakery_game {
       count += 2
     }
   }
-  def positiveAnswer(): Boolean={
-    var answer = readLine()
-    if(answer(0) == 'y'){return true}
-    return false
+  def checkIngr(recipe: String): Boolean= {
+    var haveEnough = true
+    val stockList = statement.executeQuery("SELECT * FROM stock;")
+    var stocks = scala.collection.mutable.Map[String, String]()
+    while (stockList.next()) {
+      stocks += (stockList.getString(1) -> stockList.getString(2))
+    }
+    val recipeNeeds = statement.executeQuery("select * from recipe WHERE recipe.id=" + recipe.toInt + ";")
+    while (recipeNeeds.next()) {
+      for (x <- 3 to 11 by 2) {
+        if(!(recipeNeeds.getString(x) == null)){
+          if(stocks.apply(recipeNeeds.getString(x)).toInt < recipeNeeds.getString(x+1).toInt){
+            haveEnough = false
+          }
+        }
+      }
+    }
+    haveEnough
   }
-  def subtractIngr(str: String): Unit={
-    //var change = statement.executeUpdate()
+  def subtractIngr(recipe: String): Unit={
+    val stockList = statement.executeQuery("SELECT * FROM stock;")
+    var stocks = scala.collection.mutable.Map[String, String]()
+    while (stockList.next()) {
+      stocks += (stockList.getString(1) -> stockList.getString(2))
+    }
+    val recipeNeeds = statement.executeQuery("select * from recipe WHERE recipe.id=" + recipe.toInt + ";")
+    var ingrList = scala.collection.mutable.Map[String, String]()
+    while (recipeNeeds.next()) {
+      for (x <- 3 to 11 by 2) {
+        if(!(recipeNeeds.getString(x) == null)){
+          ingrList += (recipeNeeds.getString(x) -> recipeNeeds.getString(x+1))
+        }
+      }
+    }
+    for ((k,v) <- ingrList) {
+      val changeIngr = statement.executeUpdate("UPDATE stock SET quantity=quantity-"+v+" WHERE stock.id ="+k+";")
+    }
+  }
+  def sell(recipe: String): Int={
+    
+    val resultSet = statement.executeQuery("select recipeName from recipe where recipe.id ="+recipe.toInt+';')
+    while (resultSet.next()){
+      println("Y")
+    }
   }
 }
