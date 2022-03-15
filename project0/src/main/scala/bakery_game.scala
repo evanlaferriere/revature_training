@@ -2,6 +2,7 @@ package com.Revature
 import scala.io.Source
 import java.sql.DriverManager
 import java.sql.Connection
+import scala.io.StdIn
 import scala.util.matching.Regex
 
 import java.sql.PreparedStatement
@@ -31,12 +32,29 @@ object bakery_game {
     foodList.foreach{x => var insert = statement.executeUpdate("INSERT INTO FOOD(id, foodName) VALUES("+nums.findFirstMatchIn(x).get+", \'"+words.findFirstMatchIn(x).get+"\');")}
     stockList.foreach{x => var insert = statement.executeUpdate("INSERT INTO stock(id, quantity) VALUES("+nums.findAllIn(x).toList.apply(0)+", "+nums.findAllIn(x).toList.apply(1)+");")}
 
-    println("Hello baker! Here are your kitchen stocks: ")
-    val resultSet3 = statement.executeQuery("SELECT food.foodName, stock.quantity FROM stock JOIN food on food.id = stock.id;")
-    while ( resultSet3.next() ) {
-      println(resultSet3.getString(1)+", " +resultSet3.getString(2))
-    }
+    println("Hello baker!")
 
+    var loop = true
+
+    while(loop){
+      println("Here are your kitchen stocks: ")
+      val resultSet3 = statement.executeQuery("SELECT food.foodName, stock.quantity FROM stock JOIN food on food.id = stock.id;")
+      while ( resultSet3.next() ) {
+        println(resultSet3.getString(1)+", " +resultSet3.getString(2))
+      }
+      println("And here are the recipes you know: ")
+      val resultSet2 = statement.executeQuery("SELECT id, recipeName FROM recipe;")
+      while ( resultSet2.next() ) {
+        println(resultSet2.getString(1)+", " +resultSet2.getString(2))
+      }
+      println("What do you want to make? (Type the recipe number) ")
+      var input: String = readLine()
+      if(input.toLowerCase == "quit"){
+        loop = false
+      }else{
+        
+      }
+    }
 
     connection.close()
   }
