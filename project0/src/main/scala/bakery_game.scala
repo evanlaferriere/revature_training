@@ -25,7 +25,7 @@ object bakery_game {
     var gameLoop = true
     while (gameLoop) {
       kitchenStocks()
-      var whatCook = knownRecipes()
+      knownRecipes()
       println("What do you want to make? (Type the recipe number) ")
       var recipe: String = readLine()
       if (recipe.toLowerCase == "quit") {gameLoop = false}
@@ -34,6 +34,14 @@ object bakery_game {
           println("Okay, that will take: ")
           recipeWillTake(recipe)
           println("Are you sure? Y/n")
+          var answer = readLine()
+          if(answer.toLowerCase()=="quit"){
+            gameLoop = false
+          }else{
+            if(answer(0) == 'y') {
+              subtractIngr(recipe)
+            }
+          }
         }
       }
     }
@@ -74,5 +82,13 @@ object bakery_game {
       println(resultSet4.getString(4 + count) + " " + resultSet4.getString(14))
       count += 2
     }
+  }
+  def positiveAnswer(): Boolean={
+    var answer = readLine()
+    if(answer(0) == 'y'){return true}
+    return false
+  }
+  def subtractIngr(str: String): Unit={
+    //var change = statement.executeUpdate()
   }
 }
