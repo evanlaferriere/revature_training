@@ -141,9 +141,13 @@ object bakery_game {
     while (recipeNeeds.next()) {
       for (x <- 3 to 11 by 2) {
         if(!(recipeNeeds.getString(x) == null)){
+          if(!(stocks.keySet.exists(_ ==recipeNeeds.getString(x))) ){
+            haveEnough = false
+
+          }else{
           if(stocks.apply(recipeNeeds.getString(x)).toInt < recipeNeeds.getString(x+1).toInt){
             haveEnough = false
-          }
+          }}
         }
       }
     }
